@@ -6,33 +6,51 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.text());
 
 app.post("/", function (req, res) {
-    console.log(req.body);
+
+    const pincodeRegex = /\d{6}/g;
+    const pinIndex = req.body.search(pincodeRegex);
+    const pinCode = req.body.substring(pinIndex, pinIndex + 6);
+    console.log(`Pincode - ${pinCode}`);
+    req.body = req.body.replace(pinCode, "");
+
     let modAdd = req.body.split((/(?:,|\r|\n)+/));
-    let pinCode = "";
+    console.log(modAdd);
+
+    const originalFormat = {};
+    const finalString = [];
+
+    const formatKey = (str) => {
+        let splitArr = str.trim().toLowerCase().split(" ");
+        let splitSet = new Set(splitArr);
+        str = [...splitSet].join(" ");
+        let originalString = "";
+        [...splitSet].forEach((elem, i) => {
+            originalString += (elem[0].toUpperCase() + elem.substring(1) + " ");
+        })
+        return [str, originalString];
+    }
+    // const formatValue = (str, i) => {
+    //     if(str.trim()[])
+    // }
 
     modAdd.forEach((element, i) => {
-        modAdd[i] = element.trim();
-        modAdd[i] = modAdd[i].toLowerCase();
-        if (modAdd[i].length == 6 && !isNaN(modAdd[i])) {
-            pinCode = element;
-        }
+        if(element.trim() !== "")
+            [key, value] = formatKey(element)
+            originalFormat[key] = i>0 ? '\n'+value : value;
     });
 
-    console.log("pincod :" + pinCode);
+    delete originalFormat[pinCode];
 
-    let filteredAdd = modAdd.filter((c, index) => {
-        return (modAdd.indexOf(c) === index);
-    });
+    console.log(originalFormat);
 
-    filteredAdd.forEach((e, i) => {
-        if (i != 0) {
-            filteredAdd[i] = "\n" + e;
-        }
-    });
+    for(key in originalFormat) {
+        finalString.push(originalFormat[key]);
+    }
 
-    console.log(filteredAdd);
+    finalString[finalString.length-1] = `${finalString[finalString.length-1]} ${pinCode}`;
+    console.log(finalString);
 
-    res.send(filteredAdd.toString());
+    res.send(finalString.toString());
 });
 
 
