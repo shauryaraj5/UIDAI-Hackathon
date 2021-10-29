@@ -1,56 +1,83 @@
 const express = require("express");
 const got = require("got");
+const { set } = require("mongoose");
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.text());
+app.use(express.json());
 
 app.post("/", function (req, res) {
 
-    const pincodeRegex = /\d{6}/g;
-    const pinIndex = req.body.search(pincodeRegex);
-    const pinCode = req.body.substring(pinIndex, pinIndex + 6);
-    console.log(`Pincode - ${pinCode}`);
-    req.body = req.body.replace(pinCode, "");
+    let originalAdd = req.body;
 
-    let modAdd = req.body.split((/(?:,|\r|\n)+/));
-    console.log(modAdd);
-
-    const originalFormat = {};
-    const finalString = [];
-
-    const formatKey = (str) => {
-        let splitArr = str.trim().toLowerCase().split(" ");
-        let splitSet = new Set(splitArr);
-        str = [...splitSet].join(" ");
-        let originalString = "";
-        [...splitSet].forEach((elem, i) => {
-            originalString += (elem[0].toUpperCase() + elem.substring(1) + " ");
-        })
-        return [str, originalString];
-    }
-    // const formatValue = (str, i) => {
-    //     if(str.trim()[])
-    // }
-
-    modAdd.forEach((element, i) => {
-        if(element.trim() !== "")
-            [key, value] = formatKey(element)
-            originalFormat[key] = i>0 ? '\n'+value : value;
-    });
-
-    delete originalFormat[pinCode];
-
-    console.log(originalFormat);
-
-    for(key in originalFormat) {
-        finalString.push(originalFormat[key]);
+    let addSkeleton = {
+        "House": null,
+        "Building": null,
+        "Apartment": null,
+        "Street": null,
+        "Road": null,
+        "Lane": null,
+        "Area": null,
+        "Locality": null,
+        "Sector": null,
+        "Landmark": null,
+        "Village": null,
+        "Town": null,
+        "City": null,
+        "Sub District": null,
+        "District": null,
+        "State": null,
+        "Pincode": null
     }
 
-    finalString[finalString.length-1] = `${finalString[finalString.length-1]} ${pinCode}`;
-    console.log(finalString);
+    let modAdd = {
+        "Pincode": null,
+        "State": null,
+        "District": null,
+        "Sub District": null,
+        "City": null,
+        "Town": null,
+        "Village": null,
+        "Landmark": null,
+        "Sector": null,
+        "Locality": null,
+        "Area": null,
+        "Lane": null,
+        "Road": null,
+        "Street": null,
+        "Apartment": null,
+        "Building": null,
+        "House": null
+    }
 
-    res.send(finalString.toString());
+    originalAdd = Object.assign(modAdd, originalAdd);
+
+    let addSt = new Set();
+
+    for (const field in originalAdd) {
+        if (originalAdd[field] !== null) {
+            let modAdd = originalAdd[field].split((/(?:, | ,|,|\r|\n)+/));
+
+            modAdd.forEach(element => {
+                if (addSt.has(element.toLowerCase())) {
+                    originalAdd[field] = originalAdd[field].replace(element, "");
+                } else {
+                    addSt.add(element.toLowerCase().trim());
+                }
+            });
+        }
+    }
+
+    originalAdd = Object.assign(addSkeleton, originalAdd);
+
+    for (const removeNull in originalAdd) {
+        if (originalAdd[removeNull] === null) {
+            delete originalAdd[removeNull];
+        }
+    }
+
+    res.send(originalAdd);
+
 });
 
 
