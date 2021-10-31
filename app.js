@@ -70,7 +70,9 @@ app.post("/", function (req, res) {
         }
 
         str = str.trim();
-        str = str[0].toUpperCase() + str.substring(1);
+        if (str) {
+            str = str[0].toUpperCase() + str.substring(1);
+        }
         return str;
     }
 
