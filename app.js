@@ -100,35 +100,21 @@ app.post("/", function (req, res) {
             originalAdd[key] = formatString(originalAdd[key]);
     }
 
-    //Make the final complete address obtained from above modifications
-    let formattedAddress = `${originalAdd.house ? originalAdd.house : ""}${originalAdd.building ? "," + originalAdd.building : ""}, ${originalAdd.apartment ? "," + originalAdd.apartment + "," : ""}
-    ${originalAdd.street ? originalAdd.street : ""}${originalAdd.road ? "," + originalAdd.road : ""}${originalAdd.lane ? "," + originalAdd.lane + "," : ""}
-    ${originalAdd.area ? originalAdd.area : ""}${originalAdd.locality ? "," + originalAdd.locality : ""}${originalAdd.sector ? "," + originalAdd.sector + "," : ""}
-    ${originalAdd.landmark ? originalAdd.landmark + ", " : ""}
-    ${originalAdd.village ? originalAdd.village : ""}${originalAdd.town ? ", " + originalAdd.town : ""}${originalAdd.city ? ", " + originalAdd.city + "," : ""}
-    ${originalAdd["Sub district"] ? originalAdd["Sub district"] : ""}${originalAdd.district ? ", " + originalAdd.district + ", " : ""}
-    ${originalAdd.state ? originalAdd.state : ""}${originalAdd.pincode ? " - " + originalAdd.pincode : "."}`;
+    console.log(originalAdd);
 
-    formattedAddress = formattedAddress.split("\n");
-    let finalAddress = [];
-    let re = new RegExp("\\W|_");
+    let finalAddress = "";
 
-    formattedAddress.forEach((str) => {
-        if (str.trim() !== "")
-            finalAddress.push(str);
-    });
-
-    finalAddress.forEach((str, i) => {
-        while (re.test(str[0])) {
-            str = str.replace(str[0], "");
+    for (let key in originalAdd) {
+        if (originalAdd[key] !== null) {
+            finalAddress += (originalAdd[key] + ", ");
         }
-        finalAddress[i] = str;
-    })
+    }
 
-    finalAddress = finalAddress.join("");
-    originalAdd.formatted_address = finalAddress;
+    finalAddress = finalAddress.substring(0, finalAddress.length - 2);
 
-    //Send the formatted address object
+    originalAdd["formatted_address"] = finalAddress;
+
+
     res.send(originalAdd);
 
 });
