@@ -89,6 +89,13 @@ the urban areas see the repetition of the same content in the final address.
     "formatted_address": "1085 Pattabhi Ram Shastry Lane, Mothi nagar, Kalasipalyam, Bengaluru North, Bengaluru, Karnataka, Near New Bomboo Bazaar"
 }
 ```
+Future Implementations:
+Increasing the accuracy and optimising the API! For every rule about addresses there are exceptions and edge cases to consider. More test cases are always needed.
+
+Planned features:
+
+Spell checker- For example ignore/rectify spellings of named Streets, Landmarks, VTC, District, State.
+Address Cross Checker- Take the help of google map api to validate the addresses.
 
 ## Show your support
 
