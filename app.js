@@ -96,16 +96,16 @@ app.post("/", function (req, res) {
     originalAdd = Object.assign(addSkeleton, originalAdd);
 
     for (let key in originalAdd) {
-        if (originalAdd[key] !== null)
+        if (originalAdd[key])
             originalAdd[key] = formatString(originalAdd[key]);
     }
 
-    console.log(originalAdd);
+    // console.log(originalAdd);
 
     let finalAddress = "";
 
     for (let key in originalAdd) {
-        if (originalAdd[key] !== null) {
+        if (originalAdd[key]) {
             finalAddress += (originalAdd[key] + ", ");
         }
     }
