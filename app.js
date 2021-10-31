@@ -1,56 +1,124 @@
 const express = require("express");
 const got = require("got");
+const { set } = require("mongoose");
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.text());
+app.use(express.json());
 
 app.post("/", function (req, res) {
 
-    const pincodeRegex = /\d{6}/g;
-    const pinIndex = req.body.search(pincodeRegex);
-    const pinCode = req.body.substring(pinIndex, pinIndex + 6);
-    console.log(`Pincode - ${pinCode}`);
-    req.body = req.body.replace(pinCode, "");
+    //Change all key values to lower case using lowercaseKyes()
 
-    let modAdd = req.body.split((/(?:,|\r|\n)+/));
-    console.log(modAdd);
+    const lowercaseKeys = obj =>
+        Object.keys(obj).reduce((acc, key) => {
+            acc[key.toLowerCase()] = obj[key];
+            return acc;
+        }, {});
 
-    const originalFormat = {};
-    const finalString = [];
+    let originalAdd = lowercaseKeys(req.body);
 
-    const formatKey = (str) => {
-        let splitArr = str.trim().toLowerCase().split(" ");
-        let splitSet = new Set(splitArr);
-        str = [...splitSet].join(" ");
-        let originalString = "";
-        [...splitSet].forEach((elem, i) => {
-            originalString += (elem[0].toUpperCase() + elem.substring(1) + " ");
-        })
-        return [str, originalString];
-    }
-    // const formatValue = (str, i) => {
-    //     if(str.trim()[])
-    // }
-
-    modAdd.forEach((element, i) => {
-        if(element.trim() !== "")
-            [key, value] = formatKey(element)
-            originalFormat[key] = i>0 ? '\n'+value : value;
-    });
-
-    delete originalFormat[pinCode];
-
-    console.log(originalFormat);
-
-    for(key in originalFormat) {
-        finalString.push(originalFormat[key]);
+    //Change sequence of keys according to UIDAI address format
+    let addSkeleton = {
+        "house": null,
+        "building": null,
+        "apartment": null,
+        "street": null,
+        "road": null,
+        "lane": null,
+        "area": null,
+        "locality": null,
+        "sector": null,
+        "landmark": null,
+        "village": null,
+        "town": null,
+        "city": null,
+        "sub district": null,
+        "district": null,
+        "state": null,
+        "pincode": null
     }
 
-    finalString[finalString.length-1] = `${finalString[finalString.length-1]} ${pinCode}`;
-    console.log(finalString);
+    let modAdd = {
+        "pincode": null,
+        "state": null,
+        "district": null,
+        "sub sistrict": null,
+        "city": null,
+        "town": null,
+        "village": null,
+        "landmark": null,
+        "sector": null,
+        "locality": null,
+        "area": null,
+        "lane": null,
+        "road": null,
+        "street": null,
+        "apartment": null,
+        "building": null,
+        "house": null
+    }
 
-    res.send(finalString.toString());
+    //Handles casing of resultant address
+    const formatString = (str) => {
+        const specialCharRegex = new RegExp("\\W|_");
+        while (specialCharRegex.test(str[0])) {
+            str = str.replace(str[0], "");
+        }
+        while (specialCharRegex.test(str[str.length - 1])) {
+            str = str.replace(str[str.length - 1], "");
+        }
+
+        str = str.trim();
+        if (str) {
+            str = str[0].toUpperCase() + str.substring(1);
+        }
+        return str;
+    }
+
+    originalAdd = Object.assign(modAdd, originalAdd);
+
+    let addSt = new Set();
+
+    //Remove duplication and separators in address
+    for (const field in originalAdd) {
+        if (originalAdd[field] !== null) {
+            let modAdd = originalAdd[field].split((/(?:, | ,|,|\r|\n)+/));
+
+            modAdd.forEach(element => {
+                if (addSt.has(element.toLowerCase())) {
+                    originalAdd[field] = originalAdd[field].replace(element, "");
+                } else {
+                    addSt.add(element.toLowerCase().trim());
+                }
+            });
+        }
+    }
+
+    originalAdd = Object.assign(addSkeleton, originalAdd);
+
+    for (let key in originalAdd) {
+        if (originalAdd[key])
+            originalAdd[key] = formatString(originalAdd[key]);
+    }
+
+    // console.log(originalAdd);
+
+    let finalAddress = "";
+
+    for (let key in originalAdd) {
+        if (originalAdd[key]) {
+            finalAddress += (originalAdd[key] + ", ");
+        }
+    }
+
+    finalAddress = finalAddress.substring(0, finalAddress.length - 2);
+
+    originalAdd["formatted_address"] = finalAddress;
+
+
+    res.send(originalAdd);
+
 });
 
 
