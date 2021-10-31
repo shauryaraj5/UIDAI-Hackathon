@@ -50,6 +50,22 @@ app.post("/", function (req, res) {
         "House": null
     }
 
+    const formatString = (str) => {
+        const specialCharRegex = new RegExp("\\W|_");
+        while(specialCharRegex.test(str[0]))
+        {
+            str = str.replace(str[0], "");
+        }
+        while(specialCharRegex.test(str[str.length - 1]))
+        {
+            str = str.replace(str[str.length - 1], "");
+        }
+
+        str = str.trim();
+        str = str[0].toUpperCase() + str.substring(1);
+        return str;
+    }
+
     originalAdd = Object.assign(modAdd, originalAdd);
 
     let addSt = new Set();
@@ -57,6 +73,7 @@ app.post("/", function (req, res) {
     for (const field in originalAdd) {
         if (originalAdd[field] !== null) {
             let modAdd = originalAdd[field].split((/(?:, | ,|,|\r|\n)+/));
+            // console.log(modAdd);
 
             modAdd.forEach(element => {
                 if (addSt.has(element.toLowerCase())) {
@@ -68,13 +85,49 @@ app.post("/", function (req, res) {
         }
     }
 
+    // console.log(originalAdd);
     originalAdd = Object.assign(addSkeleton, originalAdd);
 
-    for (const removeNull in originalAdd) {
-        if (originalAdd[removeNull] === null) {
-            delete originalAdd[removeNull];
-        }
+    for(let key in originalAdd) {
+        if(originalAdd[key] !== null)
+            originalAdd[key] = formatString(originalAdd[key]);
     }
+
+    // console.log(originalAdd);
+
+    let formattedAddress = `${originalAdd.House ? originalAdd.House : ""}${originalAdd.Building ? ", "+originalAdd.Building : ""}, ${originalAdd.Apartment ? ", "+originalAdd.Apartment+"," : ""}
+    ${originalAdd.Street ? originalAdd.Street : ""}${originalAdd.Road ? ", "+originalAdd.Road : ""}${originalAdd.Lane ? ", "+originalAdd.Lane+"," : ""}
+    ${originalAdd.Area ? originalAdd.Area : ""}${originalAdd.Locality ? ", "+originalAdd.Locality : ""}${originalAdd.Sector ? ", "+originalAdd.Sector+"," : ""}
+    ${originalAdd.Landmark ? +originalAdd.Landmark+"," : ""}
+    ${originalAdd.Vilage ? originalAdd.Village : ""}${originalAdd.Town ? ", "+originalAdd.Town : ""}${originalAdd.City ? ", "+originalAdd.City+"," : ""}
+    ${originalAdd["Sub District"] ? originalAdd["Sub District"] : ""}${originalAdd.District ? ", "+originalAdd.District+"," : ""}
+    ${originalAdd.State ? originalAdd.State : ""}${originalAdd.Pincode ? " - "+originalAdd.Pincode : "."}`;
+
+    formattedAddress = formattedAddress.split("\n");
+    let finalAddress = [];
+    let re = new RegExp("\\W|_");
+
+    formattedAddress.forEach((str) => {
+        if(str.trim() !== "")
+            finalAddress.push(str);
+    });
+
+    finalAddress.forEach((str, i) => {
+        while(re.test(str[0]))
+        {
+            str = str.replace(str[0], "");
+        }
+        finalAddress[i] = str;
+    })
+
+    finalAddress = finalAddress.join("\n");
+    originalAdd.formatted_address = finalAddress;
+
+    // for (const removeNull in originalAdd) {
+    //     if (originalAdd[removeNull] === null) {
+    //         delete originalAdd[removeNull];
+    //     }
+    // }
 
     res.send(originalAdd);
 
